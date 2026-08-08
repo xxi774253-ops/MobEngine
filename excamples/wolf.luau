@@ -1,18 +1,23 @@
+```luau
 local Players = game:GetService("Players")
 
 local MobEngine = require(path.to.MobEngine)
 
 local Blackboard = {
 	Target = nil :: Player?,
+	currentCooldown = 0,
 }
 
 local Methods = {
 	Search = MobEngine.createMethod("Search"),
 	Move = MobEngine.createMethod("Move"),
+	Attack = MobEngine.createMethod("Attack"),
 }
 
 local DefaultConfig = {
-	SearchRange = 60,
+	AttackRange = 8,
+	AttackCooldown = 0.5,
+	Damage = 10,
 }
 
 local engine = MobEngine.createEngine(
@@ -24,14 +29,8 @@ local engine = MobEngine.createEngine(
 local GroundProvider = engine.createProvider(
 	"Ground",
 	{
-		Walk = function(ctx, pos)
+		Move = function(ctx, pos)
 			ctx.Mob.Humanoid.WalkSpeed = ctx.Config.WalkSpeed or 12
-			ctx.Mob.Humanoid:MoveTo(pos)
-			ctx.Mob.Humanoid.MoveFinished:Wait()
-		end,
-
-		Run = function(ctx, pos)
-			ctx.Mob.Humanoid.WalkSpeed = ctx.Config.RunSpeed or 18
 			ctx.Mob.Humanoid:MoveTo(pos)
 		end,
 	}
@@ -40,13 +39,7 @@ local GroundProvider = engine.createProvider(
 local GroundAdapter = engine.createAdapter(
 	"Ground",
 	{
-		[Methods.Move] = function(ctx)
-			if ctx.Blackboard.Target then
-				return "Run"
-			end
-
-			return "Walk"
-		end,
+		[Methods.Move] = "Move",
 	}
 )
 
@@ -57,7 +50,7 @@ local SearchProvider = engine.createProvider(
 	"Search",
 	{
 		Search = function(ctx)
-			local min = ctx.Config.SearchRange
+			local min = math.huge
 			local target = nil
 
 			for _, player in ipairs(Players:GetPlayers()) do
@@ -98,20 +91,79 @@ local SearchAdapter = engine.createAdapter(
 engine:registerProvider(SearchProvider)
 engine:registerAdapter(SearchAdapter)
 
+local MeleeProvider = engine.createProvider(
+	"Melee",
+	{
+		Melee = function(ctx)
+			if os.clock() - ctx.Blackboard.currentCooldown
+				< ctx.Config.AttackCooldown then
+				return
+			end
+
+			local target = ctx.Blackboard.Target
+
+			if not target then
+				return
+			end
+
+			local character = target.Character
+
+			if not character then
+				return
+			end
+
+			local rootPart = character.PrimaryPart
+
+			if not rootPart then
+				return
+			end
+
+			if (
+				ctx.Mob.RootPart.Position - rootPart.Position
+			).Magnitude > ctx.Config.AttackRange then
+				return
+			end
+
+			local humanoid = character:FindFirstChildOfClass("Humanoid")
+
+			if not humanoid then
+				return
+			end
+
+			humanoid:TakeDamage(ctx.Config.Damage)
+
+			ctx.Blackboard.currentCooldown = os.clock()
+		end,
+	}
+)
+
+local MeleeAdapter = engine.createAdapter(
+	"Melee",
+	{
+		[Methods.Attack] = "Melee",
+	}
+)
+
+engine:registerProvider(MeleeProvider)
+engine:registerAdapter(MeleeAdapter)
+
 local behavior = engine.createBehavior(function(ctx)
 	while task.wait(0.1) do
 		ctx.Methods.Search()
 
-		local pos =
-			ctx.Blackboard.Target
-			and ctx.Blackboard.Target.Character.PrimaryPart.Position
-			or Vector3.new(
-				math.random(-5, 5),
-				ctx.Mob.RootPart.Position.Y,
-				math.random(-5, 5)
-			)
+		local target = ctx.Blackboard.Target
 
-		ctx.Methods.Move(pos)
+		if target then
+			local character = target.Character
+			local rootPart = character and character.PrimaryPart
+
+			if rootPart then
+				ctx.Methods.Move(rootPart.Position)
+				ctx.Methods.Attack()
+			end
+		else
+			ctx.Methods.Move(Vector3.zero)
+		end
 	end
 end)
 
@@ -119,10 +171,11 @@ engine:loadBehavior(behavior)
 
 local Model = path.to.model
 
-local zombie = engine:createMob(
+local wolf = engine:createMob(
 	Model,
-	{ "Ground", "Search" },
+	{ "Ground", "Search", "Melee" },
 	{}
 )
 
-zombie:Run()
+wolf:Run()
+```
