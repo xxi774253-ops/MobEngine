@@ -1,4 +1,3 @@
-```luau
 local Players = game:GetService("Players")
 
 local MobEngine = require(path.to.MobEngine)
@@ -127,4 +126,3 @@ local zombie = engine:createMob(
 )
 
 zombie:Run()
-```
