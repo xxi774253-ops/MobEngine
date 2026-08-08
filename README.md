@@ -717,6 +717,221 @@ MobEngineでは、
 
 MobEngineの柔軟性を活かすためにも、それぞれのComponentに明確な責任を持たせることを推奨します。
 
+# API Reference
+
+MobEngineが提供する主要なAPIについて説明します。
+
+## MobEngine
+
+### `MobEngine.createMethod(MethodName)`
+
+抽象的な行動を定義し、`MethodInstance`を作成します。
+
+```luau
+local Move = MobEngine.createMethod("Move")
+```
+
+### `MobEngine.createEngine(Blackboard, Methods, DefaultConfig)`
+
+MobEngineの`Engine`を作成します。
+
+```luau
+local engine = MobEngine.createEngine(
+	Blackboard,
+	Methods,
+	DefaultConfig
+)
+```
+
+---
+
+## Engine
+
+Engineは、Provider・Adapter・Behavior・Pluginを管理し、Mobを生成します。
+
+### `engine.createProvider(ProviderName, Methods)`
+
+`ProviderInstance`を作成します。
+
+```luau
+local provider = engine.createProvider(
+	"Ground",
+	{
+		Move = function(ctx, pos)
+			-- 実際の処理
+		end,
+	}
+)
+```
+
+### `engine.createAdapter(AdapterName, Methods)`
+
+`AdapterInstance`を作成します。
+
+```luau
+local adapter = engine.createAdapter(
+	"Ground",
+	{
+		[Methods.Move] = "Move",
+	}
+)
+```
+
+### `engine.createBehavior(Behavior)`
+
+`BehaviorInstance`を作成します。
+
+```luau
+local behavior = engine.createBehavior(function(ctx)
+	-- 意思決定
+end)
+```
+
+### `engine.createPlugin(Events)`
+
+`PluginInstance`を作成します。
+
+```luau
+local plugin = engine.createPlugin({
+	OnAttacked = function(ctx)
+		-- イベント処理
+	end,
+})
+```
+
+### `engine:registerProvider(Provider)`
+
+ProviderをEngineに登録します。
+
+```luau
+engine:registerProvider(provider)
+```
+
+### `engine:registerAdapter(Adapter)`
+
+AdapterをEngineに登録します。
+
+```luau
+engine:registerAdapter(adapter)
+```
+
+### `engine:loadBehavior(Behavior)`
+
+BehaviorをEngineに読み込みます。
+
+```luau
+engine:loadBehavior(behavior)
+```
+
+### `engine:createMob(Model, Providers, Config, Plugin)`
+
+指定したModelから`MobInstance`を作成します。
+
+```luau
+local mob = engine:createMob(
+	Model,
+	{ "Ground", "Search", "Melee" },
+	{
+		Damage = 20,
+	},
+	plugin
+)
+```
+
+#### Parameters
+
+| 引数          | 説明               |
+| ----------- | ---------------- |
+| `Model`     | Mobとして使用するModel  |
+| `Providers` | 使用するProvider名の配列 |
+| `Config`    | 個体ごとのConfig      |
+| `Plugin`    | 個体に追加するPlugin    |
+
+`Config`と`Plugin`は必要に応じて指定できます。
+
+---
+
+## MobInstance
+
+### `mob:Run()`
+
+Mobに読み込まれたBehaviorを実行します。
+
+```luau
+mob:Run()
+```
+
+---
+
+## Context
+
+Behavior・Provider・Pluginなどから使用できる`ctx`には、Mobの実行に必要な情報が格納されています。
+
+```luau
+ctx = {
+	Blackboard = {},
+	Methods = {},
+	Config = {},
+	Mob = {},
+	Plugin = {},
+}
+```
+
+### `ctx.Blackboard`
+
+Mobごとに保持されるランタイムデータです。
+
+```luau
+ctx.Blackboard.Target
+```
+
+### `ctx.Methods`
+
+Behaviorなどから使用する`MethodInstance`の集合です。
+
+```luau
+ctx.Methods.Move(position)
+ctx.Methods.Attack()
+```
+
+### `ctx.Config`
+
+MobごとのConfigです。
+
+```luau
+ctx.Config.Damage
+ctx.Config.AttackRange
+```
+
+### `ctx.Mob`
+
+現在のMobに関する情報です。
+
+```luau
+ctx.Mob.Model
+ctx.Mob.Humanoid
+ctx.Mob.RootPart
+```
+
+### `ctx.Plugin`
+
+Pluginのイベントを実行するためのAPIです。
+
+#### `ctx.Plugin.SendEventAsync(EventName, ...)`
+
+イベントを非同期で実行します。
+
+```luau
+ctx.Plugin.SendEventAsync("OnSomething")
+```
+
+#### `ctx.Plugin.InvokeEvent(EventName, ...)`
+
+イベントを同期的に実行し、結果を受け取ります。
+
+```luau
+local result = ctx.Plugin.InvokeEvent("OnSomething")
+```
 
 
 # Examples
