@@ -52,17 +52,17 @@ MobEngineでは、以下の要素を中心にAIを構成します
 
 ```luau
 ctx = {
-	Blackboard: { [any]: any }, -- モブごとのランタイムデータ
-	Methods: { [string]: MethodInstance }, -- 抽象的な行動を定義するMethod群
-	Config: { [any]: any }, -- モブごとの設定
+	Blackboard: { [any]: any },
+	Methods: { [string]: MethodInstance },
+	Config: { [any]: any },
 	Mob: {
-		Model: Model?, -- モデル
-		Humanoid: Humanoid?, -- Humanoid
-		RootPart: BasePart?, -- モデルのPrimaryPartまたはHumanoidRootPart
+		Model: Model?,
+		Humanoid: Humanoid?,
+		RootPart: BasePart?,
 	},
 	Plugin: {
-		SendEventAsync: (EventName: string, ...any) -> (), -- 非同期でイベントを実行する
-		InvokeEvent: (EventName: string, ...any) -> ...any, -- 同期的にイベントを実行し、結果を待機する
+		SendEventAsync: (EventName: string, ...any) -> (),
+		InvokeEvent: (EventName: string, ...any) -> ...any,
 	}
 }
 ```
@@ -71,15 +71,201 @@ ctx = {
 
 BehaviorはMobEngineにおける意思決定を担当します。
 
+### BehaviorInstance
+
+Behaviorを作成すると`BehaviorInstance`が返されます。
+
+```luau
+type BehaviorInstance = {
+	-- ...
+}
+```
+
+### API
+
+#### `engine.createBehavior()`
+
+Behaviorを作成します。
+
+```luau
+local behavior = engine.createBehavior(function(ctx)
+	-- Behavior
+end)
+```
+
+### Example
+
+```luau
+-- ...
+```
+
+---
+
 ## Method
+
+MethodはBehaviorなどから使用される、抽象的な行動を定義します。
+
+### MethodInstance
+
+Methodを作成すると`MethodInstance`が返されます。
+
+```luau
+type MethodInstance = {
+	-- ...
+}
+```
+
+### API
+
+#### `MobEngine.createMethod()`
+
+Methodを作成します。
+
+```luau
+local Move = MobEngine.createMethod("Move")
+```
+
+### Example
+
+```luau
+-- ...
+```
+
+---
 
 ## Adapter
 
+AdapterはMethodで指定された抽象的な行動を、具体的な処理へ変換します。
+
+### AdapterInstance
+
+Adapterを作成すると`AdapterInstance`が返されます。
+
+```luau
+type AdapterInstance = {
+	-- ...
+}
+```
+
+### API
+
+#### `engine.createAdapter()`
+
+Adapterを作成します。
+
+```luau
+local adapter = engine.createAdapter("Move", {
+	-- ...
+})
+```
+
+#### `engine:registerAdapter()`
+
+AdapterをEngineに登録します。
+
+```luau
+engine:registerAdapter(adapter)
+```
+
+### Example
+
+```luau
+-- ...
+```
+
+---
+
 ## Provider
+
+Providerは具体的な処理を実際に実行します。
+
+### ProviderInstance
+
+Providerを作成すると`ProviderInstance`が返されます。
+
+```luau
+type ProviderInstance = {
+	-- ...
+}
+```
+
+### API
+
+#### `engine.createProvider()`
+
+Providerを作成します。
+
+```luau
+local provider = engine.createProvider("Move", {
+	-- ...
+})
+```
+
+#### `engine:registerProvider()`
+
+ProviderをEngineに登録します。
+
+```luau
+engine:registerProvider(provider)
+```
+
+### Example
+
+```luau
+-- ...
+```
+
+---
 
 ## Plugin
 
+Pluginはイベント駆動によってMobに独自の機能や振る舞いを追加します。
 
+### PluginInstance
+
+Pluginを作成すると`PluginInstance`が返されます。
+
+```luau
+type PluginInstance = {
+	-- ...
+}
+```
+
+### API
+
+#### `engine.createPlugin()`
+
+Pluginを作成します。
+
+```luau
+local plugin = engine.createPlugin({
+	-- ...
+})
+```
+
+### Events
+
+#### `SendEventAsync()`
+
+イベントを非同期で実行します。
+
+```luau
+ctx.Plugin.SendEventAsync("OnSomething")
+```
+
+#### `InvokeEvent()`
+
+イベントを同期的に実行し、結果を受け取ります。
+
+```luau
+local result = ctx.Plugin.InvokeEvent("OnSomething")
+```
+
+### Example
+
+```luau
+-- ...
+```
 
 # Installation
 
