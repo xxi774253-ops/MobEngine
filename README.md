@@ -42,4 +42,4 @@ MobEngineでは、以下の要素を中心にAIを構成します
   イベント駆動によってモブに**独自の機能や振る舞い**を追加する拡張要素
 
 
-![MobEngine Architecture](images/architecture.png)
+![MobEngine Architecture](images/architecture.png.png)
