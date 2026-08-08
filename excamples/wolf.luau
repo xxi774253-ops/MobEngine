@@ -1,4 +1,3 @@
-```luau
 local Players = game:GetService("Players")
 
 local MobEngine = require(path.to.MobEngine)
@@ -178,4 +177,3 @@ local wolf = engine:createMob(
 )
 
 wolf:Run()
-```
