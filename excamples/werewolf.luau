@@ -17,6 +17,7 @@ local DefaultConfig = {
 	AttackRange = 8,
 	AttackCooldown = 0.5,
 	Damage = 10,
+	Speed = 12
 }
 
 local engine = MobEngine.createEngine(
@@ -29,7 +30,7 @@ local GroundProvider = engine.createProvider(
 	"Ground",
 	{
 		Move = function(ctx, pos)
-			ctx.Mob.Humanoid.WalkSpeed = ctx.Config.WalkSpeed or 12
+			ctx.Mob.Humanoid.WalkSpeed = ctx.Config.Speed
 			ctx.Mob.Humanoid:MoveTo(pos)
 		end,
 	}
