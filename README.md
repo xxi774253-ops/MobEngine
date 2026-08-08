@@ -105,6 +105,8 @@ Plugin
   └── Event-driven extensions
 ````
 
+![architecture](images/architecture.png)
+
 ---
 
 # Components
