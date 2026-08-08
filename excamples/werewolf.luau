@@ -180,7 +180,11 @@ local Plugin = engine.createPlugin({
 local werewolf = engine:createMob(
 	Model,
 	{ "Ground", "Search", "Melee" },
-	{},
+	{
+		Damage = 60,
+		AttackRange = 10
+		AttackCooldown = 5
+	},
   Plugin
 )
 
