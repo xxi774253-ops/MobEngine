@@ -334,20 +334,25 @@ Pluginはこの基本的な処理とは独立してイベントを提供し、Mo
 
 ここでは、MobEngineを使用して簡単なMob AIを作成します。
 
-今回は、以下のような単純なAIを作成します。
+今回作成するMobは、`Search()`を実行してターゲットを探し、その後`Move()`を実行します。
 
-```text
-Mob
- └─ Behavior
-     ├─ Move()
-     └─ Search()
+また、Mobごとに異なる`Config`を設定し、Providerからその値を利用します。
+
+## 1. Create the Blackboard
+
+まず、Mobごとに保持するデータであるBlackboardを定義します。
+
+```luau
+local Blackboard = {
+	Target = nil :: Model?,
+}
 ```
 
-Behaviorから抽象的なMethodを実行し、Adapterによって具体的なProviderの処理へ接続します。
+Blackboardは、Mobの行動中に変化するランタイムデータなどを保持するために使用します。
 
-## 1. Create Methods
+## 2. Create Methods
 
-まず、Behaviorから使用するMethodを作成します。
+次に、Behaviorから使用する抽象的な行動を作成します。
 
 ```luau
 local Methods = {
@@ -356,46 +361,49 @@ local Methods = {
 }
 ```
 
-ここで作成したMethodは、まだ具体的な処理を持っていません。
+この時点では、`Move()`や`Search()`が具体的に何をするのかは決まっていません。
 
-「Moveする」「Searchする」という**行動の意味だけ**を定義しています。
+Methodはあくまで「何をするか」を表します。
 
-## 2. Create the Engine
+## 3. Create the Engine
 
-BlackboardとMethodsを使用してEngineを作成します。
+Blackboard、Methods、DefaultConfigを使用してEngineを作成します。
 
 ```luau
-local Blackboard = {
-	Target = nil,
+local DefaultConfig = {
+	MoveSpeed = 10,
 }
 
 local engine = MobEngine.createEngine(
 	Blackboard,
-	Methods
+	Methods,
+	DefaultConfig
 )
 ```
 
-Engineは、作成した各Componentを管理します。
+`DefaultConfig`には、すべてのMobに適用するデフォルトの設定を定義できます。
 
-## 3. Create a Provider
+## 4. Create a Provider
 
 次に、Methodの具体的な処理を実装するProviderを作成します。
 
 ```luau
 local provider = engine.createProvider("Ground", {
 	Move = function(ctx)
-		print("Moving")
+		print("MoveSpeed:", ctx.Config.MoveSpeed)
 	end,
 
 	Search = function(ctx)
-		print("Searching")
+		print("Searching...")
 	end,
 })
 ```
 
 Providerでは、実際にゲーム内で何をするのかを実装します。
 
-## 4. Create an Adapter
+ここでは`ctx.Config.MoveSpeed`を使用して、Mobの設定値を取得しています。
+
+## 5. Create an Adapter
 
 次に、MethodとProviderの処理を接続するAdapterを作成します。
 
@@ -406,19 +414,17 @@ local adapter = engine.createAdapter("Ground", {
 })
 ```
 
-これにより、
+これにより、Behaviorから実行されたMethodがProviderの対応する処理へ接続されます。
 
 ```text
 Methods.Move()
       ↓
-Adapter
+   Adapter
       ↓
-Provider.Move()
+Provider.Move(ctx)
 ```
 
-という関係が作られます。
-
-## 5. Register the Components
+## 6. Register the Provider and Adapter
 
 作成したProviderとAdapterをEngineへ登録します。
 
@@ -429,7 +435,7 @@ engine:registerAdapter(adapter)
 
 これでEngineがProviderとAdapterを利用できるようになります。
 
-## 6. Create a Behavior
+## 7. Create a Behavior
 
 次に、Mobの意思決定を担当するBehaviorを作成します。
 
@@ -442,7 +448,7 @@ end)
 
 Behaviorでは具体的な処理を直接実装せず、Methodを使用してMobの行動を決定します。
 
-## 7. Load the Behavior
+## 8. Load the Behavior
 
 作成したBehaviorをEngineへロードします。
 
@@ -450,43 +456,68 @@ Behaviorでは具体的な処理を直接実装せず、Methodを使用してMob
 engine:loadBehavior(behavior)
 ```
 
-## 8. Create a Mob
+## 9. Create a Mob
 
 最後にMobを作成します。
 
 ```luau
 local mob = engine:createMob({
 	Ground = nil,
+
+	Config = {
+		MoveSpeed = 20,
+	},
 })
 ```
 
-これで、MobEngineによる基本的なMob AIが完成します。
+ここでは`MoveSpeed`を`20`に設定しています。
+
+そのため、このMobのProviderから`ctx.Config.MoveSpeed`を取得すると`20`になります。
+
+このように、DefaultConfigを設定しつつ、Mobごとに異なるConfigを持たせることができます。
 
 ## How It Works
 
-このQuick Startで作成した処理は、以下のように繋がっています。
+今回作成したMobの処理は、以下のように繋がっています。
 
 ```text
-Behavior
-    │
-    │ Search()
-    │ Move()
-    ▼
- Method
-    │
-    ▼
- Adapter
-    │
-    ▼
- Provider
-    │
-    ▼
-具体的な処理
+                    Engine
+                      │
+              ┌───────┴───────┐
+              │               │
+          Behavior          Config
+              │               │
+              ▼               │
+           Method             │
+              │               │
+              ▼               │
+           Adapter             │
+              │               │
+              ▼               │
+           Provider ◄──────────┘
+              │
+              ▼
+             Mob
 ```
 
-Behaviorは「何をするか」だけを決定し、Adapterがその要求をProviderの具体的な処理へ接続します。
+Behaviorは`Move()`や`Search()`という抽象的なMethodを実行します。
 
-この仕組みによって、Behaviorを変更せずにAdapterやProviderを変更したり、同じBehaviorを異なる環境のMobへ利用したりできます。
+Adapterは、そのMethodをProviderの具体的な処理へ接続します。
+
+Providerは`ctx`を通して、そのMob固有のConfigやBlackboard、Mobなどへアクセスしながら実際の処理を実行します。
+
+このようにMobEngineでは、
+
+**「何をするか」**
+
+をBehaviorとMethodで決定し、
+
+**「どう実行するか」**
+
+をAdapterとProviderで決定します。
+
+さらにConfigによって、同じBehavior・Method・Providerを使用しながら、Mobごとに異なる設定を与えることができます。
+
 
 
 # Installation
