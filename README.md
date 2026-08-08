@@ -1,4 +1,3 @@
-````markdown
 # MobEngine
 
 A modular and extensible AI framework for Roblox.
@@ -958,6 +957,3 @@ Example 2のWolfをさらに発展させ、Pluginと個体Configを追加しま�
 3. **「Robloxモデルをインポート」**から`MobEngine.rbxm`をインポートします。
 
 これでインストールは完了です。
-
-```
-```
