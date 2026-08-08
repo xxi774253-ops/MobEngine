@@ -318,7 +318,7 @@ MobEngineの各Componentは、それぞれ独立して動作するのではな�
 
 基本的な流れは以下のようになります。
 
-![architecture](architecture.png)
+![architecture](images/architecture.png)
 
 より具体的には、BehaviorがMethodを実行し、AdapterがそのMethodをどのProviderの処理として実行するかを決定します。
 
