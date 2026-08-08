@@ -4,7 +4,7 @@ A modular and extensible AI framework for Roblox.
 
 # Features
 
-このライブラリでは、以下のような機能を提供しています。
+このライブラリでは、主に5つのような機能を提供しています。
 
 * **柔軟な行動システム**
   Behavior TreeやUtility AI、State Machineなど、自分の好きなAI方式をBehaviorとして実装できます
