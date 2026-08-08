@@ -867,7 +867,66 @@ MobEngineでは、Behaviorの意思決定、Methodによる抽象化、Adapter�
 
 ここで私が自分で作った具体的なビルドを用意いたしましたので、ぜひ参考までに使用して下さい
 
-1.ターゲットを見つけると走って追いかけるゾンビ [ZombieBehavior](excamples/zombie.luau)
+## Example: Basic Zombie AI
+
+この例では、MobEngineを使用してシンプルなゾンビAIを構築します。
+
+このゾンビは、一定間隔でプレイヤーを検索し、ターゲットが存在する場合は走って追跡し、存在しない場合は歩いて移動します。
+
+この例では、以下の仕組みを組み合わせています。
+
+* **Behavior** — AIのループと意思決定
+* **Method** — `Search()`と`Move()`による抽象化
+* **SearchProvider** — プレイヤーの検索処理
+* **SearchAdapter** — `Search()`と検索処理の接続
+* **GroundProvider** — Walk / Runの具体的な移動処理
+* **GroundAdapter** — ターゲットの有無によるWalk / Runの切り替え
+* **Blackboard** — ターゲットの保持
+* **Config** — 検索範囲や移動速度などの設定
+
+[ZombieBehavior](excamples/zombie.luau)
+
+### How It Works
+
+この例で重要なのは、Behaviorが**WalkやRunを直接判断していない**ことです。
+
+Behaviorは、
+
+```text
+Search()
+Move()
+```
+
+という抽象的な行動だけを要求しています。
+
+`Search()`ではSearchAdapter / SearchProviderによってプレイヤーを検索し、その結果をBlackboardへ保存します。
+
+その後`Move()`が実行されると、GroundAdapterがBlackboardを確認し、
+
+```text
+Targetあり  → Run
+Targetなし  → Walk
+```
+
+と実行するProviderの処理を決定します。
+
+そのため、Behaviorを変更することなく、Adapter側の実装を変更するだけで、
+
+```text
+Targetあり  → Run
+Targetなし  → Walk
+```
+
+から、
+
+```text
+Targetあり  → Attack
+Targetなし  → Patrol
+```
+
+のように、Mobの具体的な挙動を変更することもできます。
+
+このようにMobEngineでは、**Behaviorによる意思決定と、Adapter / Providerによる具体的な処理を分離**できます。
 
 
 # Installation
