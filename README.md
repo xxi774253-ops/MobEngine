@@ -943,6 +943,8 @@ Example 1のZombie AIを発展させ、**攻撃行動を追加したWolf**を構
 * `Damage`による攻撃力の設定
 * `Config`によるMobごとの設定
 
+[WolfBehavior](excamples/wolf.luau)
+
 Behaviorでは、まず`Search()`によってターゲットを探します。
 
 ターゲットが存在する場合、その位置へ`Move()`し、その後`Attack()`を実行します。
@@ -996,6 +998,8 @@ Example 2のCombat Wolfをさらに発展させ、**Pluginによる独自処理*
 * `InvokeEvent()`による同期イベント
 * 個体ごとのConfig変更
 * 共通のAI構造から異なるMobを作成
+
+[WerewolfBehavior](excamples/werewolf.luau)
 
 攻撃処理が成功すると、`MeleeProvider`から`OnAttacked`イベントを発生させます。
 
