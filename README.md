@@ -717,6 +717,154 @@ MobEngineでは、
 
 MobEngineの柔軟性を活かすためにも、それぞれのComponentに明確な責任を持たせることを推奨します。
 
+# Examples
+
+ここでは、MobEngineを使用して実現できる代表的な構成を紹介します。
+
+これらはあくまで一例であり、MobEngineではAdapterやProviderなどを組み合わせることで、様々なシステムを構築できます。
+
+---
+
+## Context-dependent Actions
+
+同じMethodでも、状況に応じて異なる処理を実行できます。
+
+例えば、Behaviorから`Move()`を実行した場合でも、Adapterによって現在の状況を判断し、実際の処理を変更できます。
+
+```text
+Move()
+   │
+   ▼
+Adapter
+   ├── 通常時       → Walk
+   ├── 敵を発見     → Run
+   ├── 水中         → Swim
+   └── 空中         → Fly
+```
+
+Behaviorは「移動する」という意思決定だけを行い、移動方法そのものには依存しません。
+
+---
+
+## Different Behaviors With the Same Methods
+
+同じMethodを使用しながら、ProviderやAdapterを変更することで、異なる性質のMobを構築できます。
+
+例えば`Search()`というMethodを使用する場合でも、
+
+```text
+Search()
+   │
+   ▼
+Adapter
+   ├── Enemy Provider → 敵を検索
+   └── Ally Provider  → 味方を検索
+```
+
+のように、対象に応じて検索処理を変更できます。
+
+そのため、同じBehaviorを使用していても、敵対するMobと友好的なMobで異なる行動を実現できます。
+
+---
+
+## Abstract Actions
+
+より抽象的なMethodを定義することで、同じ行動要求から異なる処理を実行できます。
+
+例えば`Do()`というMethodを定義した場合、
+
+```text
+Do()
+   │
+   ▼
+Adapter
+   ├── 敵に対して → Attack
+   └── 味方に対して → Heal
+```
+
+のように、対象や状況に応じて実行する処理を変更できます。
+
+このようにMethodを具体的な処理から切り離すことで、Behaviorを変更せずにMobの役割や性質を変更できます。
+
+---
+
+## Event-driven Extensions
+
+Pluginを使用することで、MobEngineの基本的な行動システムとは独立した機能を追加できます。
+
+例えば、水中に入ったことをイベントとして扱う場合、
+
+```text
+OnInWater
+   │
+   ▼
+Plugin
+   ├── VFX
+   ├── SFX
+   └── Game-specific Logic
+```
+
+のように、イベントを起点として様々な処理を実行できます。
+
+`SendEventAsync()`と`InvokeEvent()`を使い分けることで、非同期・同期のどちらにも対応できます。
+
+---
+
+## Multiple Provider Implementations
+
+同じMethodでも、Providerを変更することで異なるシステムへ接続できます。
+
+例えば`ProjectileProvider`を用意した場合、
+
+```text
+Method
+   │
+   ▼
+Adapter
+   │
+   ▼
+ProjectileProvider
+   ├── Projectile A
+   ├── Projectile B
+   └── Projectile C
+```
+
+のように、ゲーム側の具体的なシステムに合わせてProviderを構成できます。
+
+Providerを分離することで、Behaviorを変更することなく、実際の処理だけを差し替えることができます。
+
+---
+
+## Combining Components
+
+MobEngineの各Componentは単独で使用するものではなく、組み合わせることでより複雑なシステムを構築できます。
+
+例えば、
+
+```text
+                  Behavior
+                     │
+                     ▼
+                   Method
+                     │
+                     ▼
+                  Adapter
+                ┌────┴────┐
+                ▼         ▼
+             Provider   Provider
+                │         │
+                └────┬────┘
+                     ▼
+                    Mob
+                     ▲
+                     │
+                  Plugin
+```
+
+のように、複数のProviderやAdapterを組み合わせることができます。
+
+MobEngineでは、Behaviorの意思決定、Methodによる抽象化、Adapterによる処理の選択、Providerによる具体的な実装、Pluginによる拡張を組み合わせることで、ゲームに合わせた柔軟なシステムを構築できます。
+
 
 # Installation
 
