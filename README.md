@@ -867,7 +867,7 @@ MobEngineでは、Behaviorの意思決定、Methodによる抽象化、Adapter�
 
 ここで私が自分で作った具体的なビルドを用意いたしましたので、ぜひ参考までに使用して下さい
 
-1.ターゲットを見つけると走って追いかけくるゾンビ [ZombieBehavior](excamples/zombie.luau)
+1.ターゲットを見つけると走って追いかけるゾンビ [ZombieBehavior](excamples/zombie.luau)
 
 
 # Installation
