@@ -53,4 +53,4 @@ MobEngineでは、以下の要素を中心にAIを構成します
 
 
 
-[▶ Installation gif](images/howToDownload.gif)
+![Installation gif](images/howToDownload.gif)
