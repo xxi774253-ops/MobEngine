@@ -41,20 +41,4 @@ MobEngineでは、以下の要素を中心にAIを構成します
 * **Plugin**
   イベント駆動によってモブに**独自の機能や振る舞い**を追加する拡張要素
 
-flowchart LR
-    B[Behavior]
-    M[Method]
-    A[Adapter]
-    P[Provider]
-
-    B --> M
-    M --> A
-    A --> P
-
-    C[ctx]
-    C -.-> B
-    C -.-> P
-    C -.-> A
-
-    PL[Plugin]
-    C -.-> PL
+https://www.youtube.com/watch?v=EusGkFV0x2o
