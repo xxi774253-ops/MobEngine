@@ -23,6 +23,7 @@ local GroundProvider = engine.createProvider(
     Walk = function(ctx,pos)
         ctx.Mob.Humanoid.WalkSpeed = ctx.Config.WalkSpeed or 12
         ctx.Mob.Humanoid:MoveTo(pos)
+        ctx.Mob.Humanoid.MoveFinished:Wait()
     end,
     Run = function(ctx,pos)
         ctx.Mob.Humanoid.WalkSpeed = ctx.Config.RunSpeed or 18
@@ -56,7 +57,7 @@ local SearchProvider = engine.createProvider(
         for _, player in ipairs(Players:GetPlayers())
             local char = player.Character or player.CharacterAdded:Wait()
             if not char then continue end
-            local rootPart = char.PrimaryPart or char:FindFirstChild("HumanoidRootPart")
+            local rootPart = char.PrimaryPart
             if not rootPart then continue end
             local dist = (ctx.Mob.RootPart.Position - rootPart.Position).Magnitude
             if dist < min then
@@ -83,7 +84,11 @@ engine:registerAdapter(SearchAdapter)
 local behavior = engine.createBehavior(function(ctx)
   while task.wait(0.1) do
     ctx.Methods.Search()
-    ctx.Methods.Move()
+    local pos = 
+      ctx.Blackboard.Target and
+      ctx.Blackboard.Target.PrimaryPart.Position or
+      Vector3.new(math.random(-5,5),ctx.Mob.RootPart.Position,math.random(-5,5))
+    ctx.Methods.Move(pos)
   end
 end)
 
