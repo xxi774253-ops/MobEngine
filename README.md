@@ -866,6 +866,7 @@ MobEngineの各Componentは単独で使用するものではなく、組み合�
 MobEngineでは、Behaviorの意思決定、Methodによる抽象化、Adapterによる処理の選択、Providerによる具体的な実装、Pluginによる拡張を組み合わせることで、ゲームに合わせた柔軟なシステムを構築できます。
 
 
+
 # Installation
 
 1. GitHubから[`MobEngine.rbxm`](MobEngine.rbxm)をダウンロードし
