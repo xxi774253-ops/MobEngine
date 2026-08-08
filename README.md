@@ -461,13 +461,14 @@ engine:loadBehavior(behavior)
 最後にMobを作成します。
 
 ```luau
-local mob = engine:createMob({
-	Ground = nil,
-
-	Config = {
+local mob = engine:createMob(
+	mobModel,
+	{"Ground"},
+	{
 		MoveSpeed = 20,
 	},
-})
+	{}
+)
 ```
 
 ここでは`MoveSpeed`を`20`に設定しています。
