@@ -51,6 +51,6 @@ MobEngineでは、以下の要素を中心にAIを構成します
 2. ライブラリを入れたいRoblox Studioを開く
 3. **「Robloxモデルをインポート」**から`MobEngine.rbxm`をインポートすれば完了
 
-
+[Install This!](MobEngine ver4.0.0.rbxm)
 
 ![Installation gif](images/howToDownload.gif)
