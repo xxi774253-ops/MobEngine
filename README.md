@@ -330,6 +330,163 @@ Pluginはこの基本的な処理とは独立してイベントを提供し、Mo
 
 この構造によって、**意思決定・抽象的な行動・具体的な処理・イベントによる拡張を分離しながら、それぞれをEngineによって一つのMobシステムとして管理できます。**
 
+# Quick Start
+
+ここでは、MobEngineを使用して簡単なMob AIを作成します。
+
+今回は、以下のような単純なAIを作成します。
+
+```text
+Mob
+ └─ Behavior
+     ├─ Move()
+     └─ Search()
+```
+
+Behaviorから抽象的なMethodを実行し、Adapterによって具体的なProviderの処理へ接続します。
+
+## 1. Create Methods
+
+まず、Behaviorから使用するMethodを作成します。
+
+```luau
+local Methods = {
+	Move = MobEngine.createMethod("Move"),
+	Search = MobEngine.createMethod("Search"),
+}
+```
+
+ここで作成したMethodは、まだ具体的な処理を持っていません。
+
+「Moveする」「Searchする」という**行動の意味だけ**を定義しています。
+
+## 2. Create the Engine
+
+BlackboardとMethodsを使用してEngineを作成します。
+
+```luau
+local Blackboard = {
+	Target = nil,
+}
+
+local engine = MobEngine.createEngine(
+	Blackboard,
+	Methods
+)
+```
+
+Engineは、作成した各Componentを管理します。
+
+## 3. Create a Provider
+
+次に、Methodの具体的な処理を実装するProviderを作成します。
+
+```luau
+local provider = engine.createProvider("Ground", {
+	Move = function(ctx)
+		print("Moving")
+	end,
+
+	Search = function(ctx)
+		print("Searching")
+	end,
+})
+```
+
+Providerでは、実際にゲーム内で何をするのかを実装します。
+
+## 4. Create an Adapter
+
+次に、MethodとProviderの処理を接続するAdapterを作成します。
+
+```luau
+local adapter = engine.createAdapter("Ground", {
+	[Methods.Move] = "Move",
+	[Methods.Search] = "Search",
+})
+```
+
+これにより、
+
+```text
+Methods.Move()
+      ↓
+Adapter
+      ↓
+Provider.Move()
+```
+
+という関係が作られます。
+
+## 5. Register the Components
+
+作成したProviderとAdapterをEngineへ登録します。
+
+```luau
+engine:registerProvider(provider)
+engine:registerAdapter(adapter)
+```
+
+これでEngineがProviderとAdapterを利用できるようになります。
+
+## 6. Create a Behavior
+
+次に、Mobの意思決定を担当するBehaviorを作成します。
+
+```luau
+local behavior = engine.createBehavior(function(ctx)
+	ctx.Methods.Search()
+	ctx.Methods.Move()
+end)
+```
+
+Behaviorでは具体的な処理を直接実装せず、Methodを使用してMobの行動を決定します。
+
+## 7. Load the Behavior
+
+作成したBehaviorをEngineへロードします。
+
+```luau
+engine:loadBehavior(behavior)
+```
+
+## 8. Create a Mob
+
+最後にMobを作成します。
+
+```luau
+local mob = engine:createMob({
+	Ground = nil,
+})
+```
+
+これで、MobEngineによる基本的なMob AIが完成します。
+
+## How It Works
+
+このQuick Startで作成した処理は、以下のように繋がっています。
+
+```text
+Behavior
+    │
+    │ Search()
+    │ Move()
+    ▼
+ Method
+    │
+    ▼
+ Adapter
+    │
+    ▼
+ Provider
+    │
+    ▼
+具体的な処理
+```
+
+Behaviorは「何をするか」だけを決定し、Adapterがその要求をProviderの具体的な処理へ接続します。
+
+この仕組みによって、Behaviorを変更せずにAdapterやProviderを変更したり、同じBehaviorを異なる環境のMobへ利用したりできます。
 
 
 # Installation
