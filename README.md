@@ -22,28 +22,6 @@ A modular and extensible AI framework for Roblox.
   モブAIだけでなく、NPC、武器、スキルなど、様々なゲームシステムへ応用が可能
 
 
-# Core Concepts
-
-MobEngineでは、以下の要素を中心にAIを構成します
-
-* **Behavior**
-  このライブラリにおける**意思決定**を行う要素
-
-* **Method**
-  Behaviorから使用される**抽象的な行動**を定義する要素
-
-* **Adapter**
-  Methodで指定された**抽象的な行動**を**具体的な処理**へ翻訳する、いわば「翻訳機」のような要素
-
-* **Provider**
-  Adapterによって選択された**具体的な処理**を実際に実行する要素
-
-* **Plugin**
-  イベント駆動によってモブに**独自の機能や振る舞い**を追加する拡張要素
-
-
-![MobEngine Architecture](images/architecture.png)
-
 # Components
 
 **Core Concepts**で紹介した各コンポーネントについて、ここから詳しく解説します。
@@ -67,7 +45,65 @@ ctx = {
 }
 ```
 
-`ctx`は、BehaviorやProviderなどがMobごとの情報へアクセスするためのContextです。
+`ctx`は、BehaviorやProviderなどが、そのMobに関連する情報へアクセスするためのContextです。
+
+---
+
+## Engine
+
+EngineはMobEngine全体を管理する**中核となる要素**です。
+
+Blackboard、Methods、DefaultConfigをもとにEngineを作成し、ProviderやAdapterの登録、Behaviorのロード、Mobの生成など、MobEngineの主要な機能を管理します。
+
+### EngineInstance
+
+Engineを作成すると`EngineInstance`が返されます。
+
+### API
+
+#### `MobEngine.createEngine(Blackboard, Methods, DefaultConfig)`
+
+MobEngineのEngineを作成します。
+
+```luau
+local engine = MobEngine.createEngine(
+	Blackboard,
+	Methods,
+	DefaultConfig
+)
+```
+
+#### `engine.createMethod(MethodName)`
+
+Methodを作成します。
+
+#### `engine.createProvider(ProviderName, ProviderMethods)`
+
+Providerを作成します。
+
+#### `engine.createAdapter(AdapterName, Methods)`
+
+Adapterを作成します。
+
+#### `engine.createBehavior(Behavior)`
+
+Behaviorを作成します。
+
+#### `engine:registerProvider(Provider)`
+
+ProviderをEngineへ登録します。
+
+#### `engine:registerAdapter(Adapter)`
+
+AdapterをEngineへ登録します。
+
+#### `engine:loadBehavior(Behavior)`
+
+BehaviorをEngineへロードします。
+
+#### `engine:createMob(Model, Providers, Config, Plugin)`
+
+設定したProvider、Config、Pluginなどを使用してMobを生成します。
 
 ---
 
@@ -77,7 +113,7 @@ BehaviorはMobEngineにおける**意思決定**を担当します。
 
 Behavior自身が具体的な処理を実装するのではなく、`ctx.Methods`に用意されたMethodを使用してMobに必要な行動を要求します。
 
-そのため、Behaviorは「どのような行動をするか」を決定し、実際に「どのように実行するか」はMethod、Adapter、Providerへ委ねることができます。
+そのため、Behaviorは「**何をするか**」を決定し、「**どのように実行するか**」はMethod、Adapter、Providerへ委ねることができます。
 
 Behaviorの実装方法は限定されていません。
 
@@ -113,13 +149,11 @@ engine:loadBehavior(behavior)
 
 MethodはBehaviorなどから使用される、**抽象的な行動**を定義します。
 
-Methodは具体的な処理を持つのではなく、「Moveする」「Searchする」「Attackする」といった**行動の意味そのもの**を表します。
+Methodは具体的な処理を直接持つのではなく、「Moveする」「Searchする」「Attackする」といった**行動そのもの**を表します。
 
-例えば`Move`というMethodをBehaviorから実行した場合、Behaviorは「移動する」という要求だけを出します。
+BehaviorはMethodを通して行動を要求するため、具体的な実装を意識する必要がありません。
 
-その要求を実際にどのような処理へ変換するかはAdapterが担当します。
-
-この分離によって、Behavior側は移動方法や環境などの具体的な実装を意識する必要がありません。
+Methodが実際にどのような処理として実行されるかは、AdapterとProviderによって決定されます。
 
 ### MethodInstance
 
@@ -143,18 +177,20 @@ Adapterは、Methodで指定された**抽象的な行動を具体的な処理�
 
 BehaviorがMethodを実行すると、AdapterはそのMethodに対応するProviderの処理を決定します。
 
-Adapterでは、単純にMethodとProviderの処理を対応付けるだけでなく、関数を使用して状況に応じた処理を動的に決定することもできます。
+AdapterにはProviderのMethodを直接指定することも、**関数を使用して状況に応じた処理を動的に決定することもできます。**
 
-そのため、同じMethodであっても、Mobの状態、環境、ターゲットなどに応じて異なるProviderの処理を実行できます。
+そのため、同じMethodでもMobの状態や環境などに応じて異なる処理を実行できます。
 
-例えば、同じ`Move()`というMethodでも、
+例えば`Move()`という同じMethodでも、
 
-* 地上なら`Walk`
-* ターゲットを発見したら`Run`
-* 水中なら`Swim`
-* 空中なら`Fly`
+```text
+地上     → Walk
+敵を発見 → Run
+水中     → Swim
+空中     → Fly
+```
 
-のように、Adapter側で実行する処理を変更できます。
+のようにAdapter側で実行する処理を変更できます。
 
 Adapterは、**BehaviorとProviderを直接結び付けず、その間を抽象化する重要な層**として機能します。
 
@@ -176,7 +212,7 @@ local adapter = engine.createAdapter("Move", {
 
 #### `engine:registerAdapter(Adapter)`
 
-AdapterをEngineに登録します。
+AdapterをEngineへ登録します。
 
 ```luau
 engine:registerAdapter(adapter)
@@ -190,9 +226,9 @@ Providerは、Adapterによって選択された**具体的な処理を実際に
 
 Providerはゲーム側の具体的なシステムとの接続点になります。
 
-例えば移動を担当するProviderであれば、実際にHumanoidを動かしたり、飛行処理を行ったりする処理を実装します。
+例えば移動を担当するProviderであれば、Humanoidを動かしたり、飛行処理を行ったりする実際の処理を実装します。
 
-Providerの処理には`ctx`が渡されるため、Blackboard、Config、Mobなど、そのMobに必要な情報へアクセスできます。
+Providerの各処理には`ctx`が渡されるため、Blackboard、Config、Mobなど、そのMobに必要な情報へアクセスできます。
 
 Providerは特定のBehaviorに依存する必要がありません。
 
@@ -210,13 +246,15 @@ Providerを作成します。
 
 ```luau
 local provider = engine.createProvider("Move", {
-	-- ProviderMethods
+	Move = function(ctx)
+		-- Move
+	end,
 })
 ```
 
 #### `engine:registerProvider(Provider)`
 
-ProviderをEngineに登録します。
+ProviderをEngineへ登録します。
 
 ```luau
 engine:registerProvider(provider)
@@ -230,7 +268,7 @@ Pluginは、イベント駆動によってMobに**独自の機能や振る舞い
 
 PluginはMethodやProviderとは異なり、MobEngineの基本的な行動処理から独立して、イベントを通じて外部システムと連携できます。
 
-`ctx.Plugin`からイベントを実行でき、イベントごとに任意の処理を登録できます。
+Pluginではイベント名と`ctx`を受け取る関数を定義し、`ctx.Plugin`からそのイベントを実行できます。
 
 ### PluginInstance
 
@@ -240,88 +278,56 @@ Pluginを作成すると`PluginInstance`が返されます。
 
 #### `SendEventAsync(EventName, ...)`
 
-イベントを非同期で実行します。
+イベントを**非同期**で実行します。
 
-呼び出した側はイベントの処理が完了するまで待機する必要がありません。
+イベントの処理を待機せず、そのまま次の処理へ進みます。
 
 #### `InvokeEvent(EventName, ...)`
 
-イベントを同期的に実行します。
+イベントを**同期的**に実行します。
 
-イベントの処理が完了するまで待機し、イベント側から返された値を受け取ることができます。
+イベントの処理が完了するまで待機し、イベントから返された値を受け取ることができます。
 
 ---
 
-# Component Flow
+## Component Flow
 
-MobEngineの各Componentは、それぞれ独立して動作するのではなく、互いに連携してMobの行動を構成します。
+MobEngineの各Componentは、それぞれ独立して動作するのではなく、Engineによって管理されながら連携してMobの行動を構成します。
 
-基本的な処理の流れは以下のようになります。
-
-```text
-Behavior
-   │
-   │ Methodを実行
-   ▼
-Method
-   │
-   │ Adapterによって処理を決定
-   ▼
-Adapter
-   │
-   │ Providerの具体的な処理を選択
-   ▼
-Provider
-   │
-   │ ctxを使用して処理を実行
-   ▼
-Mob
-```
-
-各Componentは`ctx`を通して、そのMobに対応する情報へアクセスできます。
+基本的な流れは以下のようになります。
 
 ```text
-                 ┌──────────────┐
-                 │   Behavior   │
-                 └──────┬───────┘
-                        │
-                   Methodを実行
-                        │
-                        ▼
-                 ┌──────────────┐
-                 │    Method   │
-                 └──────┬───────┘
-                        │
-                   Adapterが変換
-                        │
-                        ▼
-                 ┌──────────────┐
-                 │   Adapter    │
-                 └──────┬───────┘
-                        │
-                  処理を選択
-                        │
-                        ▼
-                 ┌──────────────┐
-                 │   Provider   │
-                 └──────┬───────┘
-                        │
-                     ctxを使用
-                        │
-                        ▼
-                 ┌──────────────┐
-                 │     Mob      │
-                 └──────────────┘
+                         Engine
+                           │
+          ┌────────────────┼────────────────┐
+          │                │                │
+          ▼                ▼                ▼
+      Behavior          Adapter          Provider
+          │                ▲                ▲
+          │                │                │
+          ▼                │                │
+        Method ─────────────┘                │
+          │                                  │
+          └──────────────────────────────────┘
+                           │
+                           ▼
+                          Mob
 
-                        ▲
-                        │
-                 ┌──────┴───────┐
-                 │    Plugin    │
-                 │   Events     │
-                 └──────────────┘
+                         Plugin
+                           │
+                           └── Event ──→ ctx
 ```
 
-この構造によって、**意思決定・抽象的な行動・具体的な処理・拡張機能をそれぞれ分離したまま連携させることができます。**
+より具体的には、BehaviorがMethodを実行し、AdapterがそのMethodをどのProviderの処理として実行するかを決定します。
+
+Providerは選択された具体的な処理を`ctx`を利用して実行します。
+
+`ctx`にはMobごとのBlackboard、Methods、Config、Mob、Pluginが含まれているため、それぞれの処理は現在操作しているMobに必要な情報へアクセスできます。
+
+Pluginはこの基本的な処理とは独立してイベントを提供し、MobEngineの外部システムや独自機能との連携に利用できます。
+
+この構造によって、**意思決定・抽象的な行動・具体的な処理・イベントによる拡張を分離しながら、それぞれをEngineによって一つのMobシステムとして管理できます。**
+
 
 
 # Installation
