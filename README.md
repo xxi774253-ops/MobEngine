@@ -45,31 +45,38 @@ MobEngineでは、以下の要素を中心にAIを構成します
 ![MobEngine Architecture](images/architecture.png)
 
 # Components
-**Core Conceptsで少し話したコンポーネントたちを詳しく解説します
-解説する前にこの先多用するctxの中身について。
+
+**Core Concepts**で紹介した各コンポーネントについて、ここから詳しく解説します。
+
+まず、これ以降の説明で多用する`ctx`について説明します。
+
 ```luau
 ctx = {
-	Blackboard: { [any]: any }, --ブラックボード
-	Methods: { [string]: MethodInstance }, --Behaviorやその他場所から使用される抽象的な行動関数群
-	Config: { [any]: any }, --個体ごとの固有値
+	Blackboard: { [any]: any }, -- モブごとのランタイムデータ
+	Methods: { [string]: MethodInstance }, -- 抽象的な行動を定義するMethod群
+	Config: { [any]: any }, -- モブごとの設定
 	Mob: {
-		Model: Model? --モデル
-		Humanoid: Humanoid? --ヒューマノイド
-		RootPart: Part? --モデルのプライマリーパート又はHumanoidRootPart
+		Model: Model?, -- モデル
+		Humanoid: Humanoid?, -- Humanoid
+		RootPart: BasePart?, -- モデルのPrimaryPartまたはHumanoidRootPart
 	},
 	Plugin: {
-		SendEventAsync: (EventName: string, ...any) -> (), --非同期にイベントを実行させる
-		InvokeEvent: (EventNmae: string, ...any) -> ...any, --同期的にイベントを実行し待機
+		SendEventAsync: (EventName: string, ...any) -> (), -- 非同期でイベントを実行する
+		InvokeEvent: (EventName: string, ...any) -> ...any, -- 同期的にイベントを実行し、結果を待機する
 	}
 }
 ```
+
 ## Behavior
 
 BehaviorはMobEngineにおける意思決定を担当します。
 
 ## Method
+
 ## Adapter
+
 ## Provider
+
 ## Plugin
 
 
