@@ -46,7 +46,11 @@ MobEngineでは、以下の要素を中心にAIを構成します
 
 # Components
 **Core Conceptsで少し話したコンポーネントたちを詳しく解説します**
+```markdown
 ## Behavior
+
+BehaviorはMobEngineにおける意思決定を担当します。
+
 ```lua
 local behavior = engine.createBehavior(function(ctx)
 	ctx.Methods.Walk()
