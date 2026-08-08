@@ -45,7 +45,7 @@ MobEngineでは、以下の要素を中心にAIを構成します
 ![MobEngine Architecture](images/architecture.png)
 
 # Components
-Core Conceptsで少し話したコンポーネントたちを詳しく解説します
+**Core Conceptsで少し話したコンポーネントたちを詳しく解説します**
 ## Behavior
 ## Method
 ## Adapter
