@@ -928,6 +928,109 @@ Targetなし  → Patrol
 
 このようにMobEngineでは、**Behaviorによる意思決定と、Adapter / Providerによる具体的な処理を分離**できます。
 
+## Example 2: Combat Wolf
+
+Example 1のZombie AIを発展させ、**攻撃行動を追加したWolf**を構築します。
+
+この例では、基本的な`Search()`と`Move()`に加えて、`Attack()`というMethodと`MeleeProvider`を追加しています。
+
+### What This Example Demonstrates
+
+* 複数のMethodを組み合わせたAI
+* 攻撃処理をProviderとして分離
+* `AttackRange`による攻撃可能範囲の設定
+* `AttackCooldown`による攻撃間隔の設定
+* `Damage`による攻撃力の設定
+* `Config`によるMobごとの設定
+
+Behaviorでは、まず`Search()`によってターゲットを探します。
+
+ターゲットが存在する場合、その位置へ`Move()`し、その後`Attack()`を実行します。
+
+```text
+Search()
+   │
+   ▼
+Blackboard.Target
+   │
+   ├── Targetなし
+   │      ↓
+   │   Move()
+   │
+   └── Targetあり
+          │
+          ├── Move(TargetPosition)
+          │
+          └── Attack()
+                 │
+                 ▼
+            MeleeProvider
+                 │
+          ┌──────┴──────┐
+          ▼             ▼
+     AttackRange   AttackCooldown
+          │             │
+          └──────┬──────┘
+                 ▼
+              Damage
+```
+
+Example 1では移動だけだったBehaviorに、攻撃という新しい行動を追加しています。
+
+それでもBehaviorは具体的な攻撃処理を直接実装せず、`Attack()`というMethodを呼び出すだけです。
+
+これにより、攻撃方法を変更する場合でもBehaviorを変更する必要がありません。
+
+---
+
+## Example 3: Plugin Werewolf
+
+Example 2のCombat Wolfをさらに発展させ、**Pluginによる独自処理**を追加したWerewolfを構築します。
+
+基本的なAI構造はWolfと同じですが、攻撃成功時に`OnAttacked`イベントを発生させ、Plugin側で追加の処理を実行します。
+
+### What This Example Demonstrates
+
+* PluginによるMob固有の機能追加
+* ProviderからPluginへのイベント通知
+* `InvokeEvent()`による同期イベント
+* 個体ごとのConfig変更
+* 共通のAI構造から異なるMobを作成
+
+攻撃処理が成功すると、`MeleeProvider`から`OnAttacked`イベントを発生させます。
+
+```text
+MeleeProvider
+      │
+      │ InvokeEvent("OnAttacked")
+      ▼
+    Plugin
+      │
+      ▼
+ OnAttacked
+      │
+      └── Werewolf-specific behavior
+```
+
+さらにWerewolfでは、Wolfと同じProviderやBehaviorを使用しながら、Configを変更しています。
+
+```text
+Wolf
+├── Speed = 20
+└── Default Attack Config
+
+Werewolf
+├── Damage = 60
+├── AttackRange = 10
+├── AttackCooldown = 5
+└── Plugin
+     └── OnAttacked
+```
+
+このように、MobEngineでは共通のAIシステムを再利用しながら、**ConfigやPluginを組み合わせることで個体ごとの特徴を追加**できます。
+
+BehaviorやProviderを作り直すことなく、同じシステムから異なる性質を持つMobを構築できます。
+
 
 # Installation
 
