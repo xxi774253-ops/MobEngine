@@ -20,3 +20,8 @@ A modular and extensible AI framework for Roblox.
 
 * **高い拡張性**
   モブAIだけでなく、NPC、武器、スキルなど、様々なゲームシステムへ応用できます
+
+
+# Core Concepts
+
+* ライブラリを使う際には、以下のような要素が必要となります
