@@ -27,7 +27,7 @@ local GroundProvider = engine.createProvider(
 		Walk = function(ctx, pos)
 			ctx.Mob.Humanoid.WalkSpeed = ctx.Config.WalkSpeed or 12
 			ctx.Mob.Humanoid:MoveTo(pos)
-			ctx.Mob.Humanoid.MoveFinished:Wait()
+			ctx.Mob.Humanoid.MoveToFinished:Wait()
 		end,
 
 		Run = function(ctx, pos)
