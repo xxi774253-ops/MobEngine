@@ -354,15 +354,23 @@ local result = ctx.Plugin.InvokeEvent("OnSomething")
 
 ここでは、MobEngineを使って簡単なMob AIを構築します。
 
+この例では、Mobがプレイヤーを探索し、ターゲットが見つかった場合にその方向へ移動するシンプルなAIを作成します。
+
+---
+
 ## 1. Blackboardを定義する
 
-まず、Mobが使用するランタイムデータを定義します。
+まず、Mobごとに保持するランタイムデータを定義します。
 
 ```luau
 local Blackboard = {
 	Target = nil :: Player?,
 }
 ```
+
+`Blackboard`はMobごとにコピーされるため、各Mobが独立した状態を持つことができます。
+
+---
 
 ## 2. Methodを定義する
 
@@ -375,20 +383,18 @@ local Methods = {
 }
 ```
 
-Engine経由で作成することもできます。
+ここでは、
 
-```luau
-local Methods = {
-	Search = engine.createMethod("Search"),
-	Move = engine.createMethod("Move"),
-}
-```
+* `Search` — ターゲットを探す
+* `Move` — ターゲットへ移動する
 
-Engine経由の場合、Engineの型情報を利用できます。
+という2つのMethodを定義しています。
+
+---
 
 ## 3. Configを定義する
 
-Mob全体で使用するデフォルト設定を定義します。
+Mobが使用するデフォルト設定を定義します。
 
 ```luau
 local DefaultConfig = {
@@ -397,7 +403,13 @@ local DefaultConfig = {
 }
 ```
 
+ConfigはMobごとにコピーされるため、個体ごとに設定を変更できます。
+
+---
+
 ## 4. Engineを作成する
+
+定義したBlackboard、Methods、Configを使ってEngineを作成します。
 
 ```luau
 local engine = MobEngine.createEngine(
@@ -407,47 +419,105 @@ local engine = MobEngine.createEngine(
 )
 ```
 
-Engineを作成すると、MobEngineの各コンポーネントをEngine経由で作成できるようになります。
+Engineを作成すると、Engineが持つ型情報を利用して各コンポーネントを作成できるようになります。
+
+---
 
 ## 5. Providerを作成する
 
-具体的な処理をProviderに実装します。
+次に、Methodの具体的な処理をProviderに実装します。
 
 ```luau
 local GroundProvider = engine.createProvider(
 	"Ground",
 	{
+		Search = function(ctx)
+			local character = ctx.Mob.Model
+			if not character then
+				return
+			end
+
+			local players = game:GetService("Players")
+
+			local closestPlayer = nil
+			local closestDistance = ctx.Config.SearchRange
+
+			for _, player in players:GetPlayers() do
+				local playerCharacter = player.Character
+				local rootPart = playerCharacter
+					and playerCharacter.PrimaryPart
+
+				if rootPart then
+					local distance = (
+						rootPart.Position - ctx.Mob.RootPart.Position
+					).Magnitude
+
+					if distance <= closestDistance then
+						closestPlayer = player
+						closestDistance = distance
+					end
+				end
+			end
+
+			ctx.Blackboard.Target = closestPlayer
+		end,
+
 		Move = function(ctx, position)
-			ctx.Mob.Humanoid.WalkSpeed = ctx.Config.Speed
-			ctx.Mob.Humanoid:MoveTo(position)
+			local humanoid = ctx.Mob.Humanoid
+			if not humanoid then
+				return
+			end
+
+			humanoid.WalkSpeed = ctx.Config.Speed
+			humanoid:MoveTo(position)
 		end,
 	}
 )
 ```
 
+Providerでは、`Search()`や`Move()`が実際に何をするのかを実装します。
+
+---
+
 ## 6. Adapterを作成する
 
-MethodとProviderの処理を接続します。
+次に、MethodとProviderの処理を接続します。
 
 ```luau
 local GroundAdapter = engine.createAdapter(
 	"Ground",
 	{
+		[Methods.Search] = "Search",
 		[Methods.Move] = "Move",
 	}
 )
 ```
 
+これにより、
+
+```text
+Methods.Search → GroundProvider.Search
+Methods.Move   → GroundProvider.Move
+```
+
+という接続が作られます。
+
+---
+
 ## 7. ProviderとAdapterを登録する
+
+作成したProviderとAdapterをEngineへ登録します。
 
 ```luau
 engine:registerProvider(GroundProvider)
 engine:registerAdapter(GroundAdapter)
 ```
 
+---
+
 ## 8. Behaviorを作成する
 
-Mobの意思決定を定義します。
+次に、Mobの意思決定をBehaviorとして定義します。
 
 ```luau
 local behavior = engine.createBehavior(function(ctx)
@@ -468,31 +538,134 @@ local behavior = engine.createBehavior(function(ctx)
 end)
 ```
 
-## 9. Behaviorを読み込む
+Behaviorでは具体的な移動処理を直接実装していません。
+
+```luau
+ctx.Methods.Move(position)
+```
+
+とすることで、実際の移動処理はAdapterとProviderに任せています。
+
+---
+
+## 9. BehaviorをEngineに読み込む
+
+作成したBehaviorをEngineに読み込みます。
 
 ```luau
 engine:loadBehavior(behavior)
 ```
 
+これで、Engineから作成されるMobがこのBehaviorを使用するようになります。
+
+---
+
 ## 10. Mobを作成する
+
+Modelを指定してMobを作成します。
 
 ```luau
 local mob = engine:createMob(
 	Model,
-	{ "Ground", "Search" },
+	{ "Ground" },
 	{}
 )
 ```
 
+`"Ground"`は、先ほど登録したProvider / Adapterの名前です。
+
+3つ目の引数には個体ごとのConfigを指定できます。
+
+例えば、通常より速いMobを作成する場合は、
+
+```luau
+local fastMob = engine:createMob(
+	Model,
+	{ "Ground" },
+	{
+		Speed = 20,
+	}
+)
+```
+
+のようにできます。
+
+---
+
 ## 11. Mobを実行する
+
+最後にBehaviorを実行します。
 
 ```luau
 mob:Run()
 ```
 
-このように、Behaviorは意思決定を担当し、Method・Adapter・Providerを通して実際の処理が実行されます。
+これでMobは、
+
+```text
+Behavior
+   ↓
+Search Method
+   ↓
+Ground Adapter
+   ↓
+Ground Provider
+   ↓
+ターゲットを検索
+```
+
+そしてターゲットが見つかると、
+
+```text
+Behavior
+   ↓
+Move Method
+   ↓
+Ground Adapter
+   ↓
+Ground Provider
+   ↓
+Humanoid:MoveTo()
+```
+
+という流れで処理を実行します。
 
 ---
+
+## 完成した構成
+
+最終的な構成は以下のようになります。
+
+```text
+Blackboard
+    │
+    ▼
+  Engine
+    │
+    ├── Methods
+    │     ├── Search
+    │     └── Move
+    │
+    ├── Provider
+    │     └── Ground
+    │           ├── Search
+    │           └── Move
+    │
+    ├── Adapter
+    │     └── Ground
+    │           ├── Search → Search
+    │           └── Move   → Move
+    │
+    └── Behavior
+          │
+          ├── Search()
+          │
+          └── Move()
+```
+
+このようにMobEngineでは、**Behaviorが意思決定を行い、Method → Adapter → Providerという流れで具体的な処理を実行します。**
+
+同じBehaviorでもAdapterやProviderを変更することで、異なる環境や実装へ再利用できます。
 
 # Best Practices
 
