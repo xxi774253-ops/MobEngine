@@ -183,7 +183,7 @@ local werewolf = engine:createMob(
 	{ "Ground", "Search", "Melee" },
 	{
 		Damage = 60,
-		AttackRange = 10
+		AttackRange = 10,
 		AttackCooldown = 5
 	},
   Plugin
