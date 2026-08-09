@@ -1127,7 +1127,7 @@ Example 2のWolfをさらに発展させ、Pluginと個体Configを追加しま�
 
 # Installation
 
-1. GitHubから`MobEngine.rbxm`をダウンロードします。
+1. GitHubから[`MobEngine.rbxm`](MobEngine.rbxm)をダウンロードします。
 2. ライブラリを使用したいRoblox Studioを開きます。
 3. **「Robloxモデルをインポート」**から`MobEngine.rbxm`をインポートします。
 
