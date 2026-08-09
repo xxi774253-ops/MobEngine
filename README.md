@@ -15,6 +15,7 @@ A modular and extensible AI framework for Roblox.
   - [Example 1: Zombie](#example-1-zombie)
   - [Example 2: Wolf](#example-2-wolf)
   - [Example 3: Werewolf](#example-3-werewolf)
+- [License](#license)
 - [Installation](#installation)
 
 ---
@@ -1124,6 +1125,13 @@ Example 2のWolfをさらに発展させ、Pluginと個体Configを追加しま�
 [Full Example](examples/werewolf.luau)
 
 ---
+
+# License
+
+MobEngine is licensed under the MIT License.
+See the [LICENSE](LICENSE.md) file for details.
+
+----
 
 # Installation
 
